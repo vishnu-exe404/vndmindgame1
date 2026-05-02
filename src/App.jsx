@@ -274,99 +274,286 @@ function SplashScreen({ onEnter, onTutorial }) {
 // ============================================================
 function TutorialScreen({ onPlay, onBack }) {
   const [tutStep, setTutStep] = useState(0);
-  const totalSteps = 3;
+  const [letterIdx, setLetterIdx] = useState(0);
 
-  const steps = [
-    {
-      title: "Imagine a secret",
-      body: "Pick a simple word and hold it in your mind. Focus on each letter clearly.",
-      visual: (
-        <div className="flex gap-2 py-8">
-          {['M', 'I', 'N', 'D'].map((l, i) => (
-            <div key={i} className={`w-12 h-16 rounded-xl flex items-center justify-center text-3xl font-black italic border-2 transition-all ${i === 0 ? 'bg-yellow-500 text-black border-yellow-400 shadow-[0_0_20px_rgba(212,175,55,0.6)]' : 'bg-yellow-500/10 text-yellow-500/40 border-yellow-500/20'}`}>
-              {l}
-            </div>
-          ))}
-        </div>
-      ),
-      label: "CHOOSE A WORD (E.G., 'MIND')"
-    },
-    {
-      title: "Find your path",
-      body: "I'll show you grids of letters. For every letter in your word, simply tap the row that contains it.",
-      visual: (
-        <div className="w-full space-y-2 py-6">
-          <div className="flex items-center bg-yellow-500/10 border-2 border-yellow-500 rounded-xl overflow-hidden relative shadow-[0_0_25px_rgba(212,175,55,0.3)] animate-pulse">
-             <div className="w-10 bg-yellow-500/20 py-3 flex items-center justify-center border-r border-yellow-500/20 text-[9px] font-bold text-yellow-500">G1</div>
-             <div className="flex-1 flex justify-around px-2">
-                <span className="text-xl font-black text-yellow-500">M</span>
-                <span className="text-xl font-black text-white/30">A</span>
-                <span className="text-xl font-black text-white/30">B</span>
-                <span className="text-xl font-black text-white/30">C</span>
-             </div>
-             <div className="px-3 bg-yellow-500 py-1 rounded-l-md text-black font-black text-[10px]">TAP</div>
-          </div>
-          <div className="flex items-center bg-white/5 border border-white/10 rounded-xl overflow-hidden opacity-40">
-             <div className="w-10 bg-white/5 py-3 border-r border-white/5" />
-             <div className="flex-1 flex justify-around px-2">
-                <span className="text-xl font-black text-white/50">X</span>
-                <span className="text-xl font-black text-white/50">Y</span>
-                <span className="text-xl font-black text-white/50">Z</span>
-                <span className="text-xl font-black text-white/50">W</span>
-             </div>
-          </div>
-        </div>
-      ),
-      label: "LOCATE EACH LETTER"
-    },
-    {
-      title: "The math reveals",
-      body: "After two rounds of pattern detection, I will separate the signal from the noise and pull the word from your mind.",
-      visual: (
-        <div className="py-8 flex flex-col items-center">
-          <div className="relative">
-             <div className="absolute inset-0 bg-yellow-500 rounded-full blur-2xl opacity-20 animate-pulse" />
-             <Eye size={64} className="text-yellow-500 relative animate-bounce" />
-          </div>
-          <div className="mt-4 text-xs font-bold text-yellow-600 tracking-[0.3em] uppercase">Processing Patterns...</div>
-        </div>
-      ),
-      label: "REVEALING THE SECRET"
-    }
-  ];
+  const WORD = ['M', 'A', 'T', 'H', 'S'];
 
-  const current = steps[tutStep];
+  const TUT_GRID1 = Array.from({ length: 7 }, (_, i) => ALPHA.slice(i * 4, (i + 1) * 4));
 
-  return (
-    <div className="w-full flex-1 flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-sm mx-auto">
-      <span className="text-[10px] tracking-[0.4em] text-yellow-500 font-bold uppercase mb-2">◆ HOW TO PLAY ◆</span>
-      <h2 className="text-4xl font-black text-center tracking-tight leading-tight italic">{current.title}</h2>
-      
-      <p className="text-white/60 text-center text-[14px] leading-relaxed mt-4">
-        {current.body}
+  const TUT_SEL1 = [3, 0, 4, 1, 4];
+
+  const TUT_GRID2 = [[], [], [], []];
+  TUT_SEL1.forEach((r) => {
+    TUT_GRID2[0].push(TUT_GRID1[r][0]);
+    TUT_GRID2[1].push(TUT_GRID1[r][1]);
+    TUT_GRID2[2].push(TUT_GRID1[r][2]);
+    TUT_GRID2[3].push(TUT_GRID1[r][3]);
+  });
+
+  const TUT_SEL2 = [0, 0, 3, 3, 2];
+
+  const ProgressDots = ({ active }) => (
+    <div className="flex gap-2 my-6 justify-center">
+      {[0, 1, 2].map(i => (
+        <div key={i} className={`h-2 rounded-full transition-all duration-300 ${
+          i === active
+            ? 'w-6 bg-yellow-500 shadow-[0_0_8px_rgba(212,175,55,0.6)]'
+            : i < active
+            ? 'w-2 bg-yellow-600/40'
+            : 'w-2 bg-white/10'
+        }`} />
+      ))}
+    </div>
+  );
+
+  const LetterProgress = ({ currentLi }) => (
+    <div className="flex flex-wrap justify-center gap-2 mb-4">
+      {WORD.map((_, i) => (
+        <div key={i} className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold border transition-all ${
+          i < currentLi
+            ? 'bg-yellow-600/20 border-yellow-600/50 text-yellow-500'
+            : i === currentLi
+            ? 'bg-yellow-600/40 border-yellow-500 text-white scale-110 shadow-[0_0_15px_rgba(212,175,55,0.3)]'
+            : 'bg-white/5 border-white/10 text-white/30'
+        }`}>
+          {i + 1}
+        </div>
+      ))}
+    </div>
+  );
+
+  const GridRows = ({ grid, highlightRow, labelPrefix }) => (
+    <div className="space-y-3 w-full">
+      {grid.map((row, ri) => (
+        <div key={ri} className={`w-full flex items-center rounded-2xl overflow-hidden border transition-all ${
+          ri === highlightRow
+            ? 'bg-yellow-500/5 border-yellow-500/50 shadow-[0_0_16px_rgba(212,175,55,0.15)]'
+            : 'bg-white/5 border-white/10 opacity-35'
+        }`}>
+          <div className="w-12 bg-white/5 py-5 flex items-center justify-center border-r border-white/5">
+            <span className="text-[10px] font-bold text-yellow-600/60 uppercase">{labelPrefix}{ri + 1}</span>
+          </div>
+          <div className="flex-1 flex justify-around px-4">
+            {row.map((l, li) => (
+              <span key={li} className="text-xl font-black text-white/80">
+                {l === ' ' ? '·' : l}
+              </span>
+            ))}
+          </div>
+          <div className={`px-4 transition-all ${ri === highlightRow ? 'opacity-100' : 'opacity-0'}`}>
+            <ChevronRight size={16} className="text-yellow-500" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const BottomNav = ({ onBack, onNext, nextLabel }) => (
+    <div className="w-full flex gap-3 mt-2">
+      <button
+        onClick={onBack}
+        className="flex-1 bg-white/5 border border-white/10 py-4 rounded-2xl text-[11px] font-black tracking-widest text-white/50 hover:bg-white/10 transition-all flex items-center justify-center gap-2 uppercase"
+      >
+        <ChevronLeft size={16} /> Back
+      </button>
+      <button
+        onClick={onNext}
+        className="flex-[2] bg-gradient-to-r from-yellow-500 to-yellow-700 py-4 rounded-2xl text-black font-black tracking-widest transition-transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-yellow-600/20 flex items-center justify-center gap-2 uppercase text-[11px]"
+      >
+        {nextLabel} <ChevronRight size={16} />
+      </button>
+    </div>
+  );
+
+  // ── STEP 0: Word setup ─────────────────────────────────────
+  if (tutStep === 0) return (
+    <div className="w-full flex-1 flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-500 py-6">
+      <span className="text-[10px] tracking-[0.3em] text-yellow-500 font-bold uppercase mb-4">◆ Tutorial · Step 1 of 3 ◆</span>
+
+      <h2 className="text-5xl font-black text-center tracking-tight leading-tight mb-4">
+        Think of a <span className="italic font-normal text-yellow-500">word.</span>
+      </h2>
+
+      <p className="text-white/60 text-center text-sm leading-relaxed max-w-xs mb-6">
+        Pick any word and keep it secret. Just tell the game how many letters it has.
+        <br /><br />
+        For this tutorial, the word is{' '}
+        <span className="text-yellow-400 font-black not-italic">MATHS</span>.
       </p>
 
-      {/* Visual Demo Area */}
-      <div className="w-full flex-1 flex flex-col items-center justify-center min-h-[220px]">
-        {current.visual}
-        <span className="text-[10px] font-black tracking-[0.3em] text-white/30 uppercase mt-4">{current.label}</span>
-      </div>
-
-      {/* Pagination Dots */}
-      <div className="flex gap-2 mt-8 mb-10">
-        {steps.map((_, i) => (
-          <div key={i} className={`h-2 rounded-full transition-all duration-300 ${i === tutStep ? 'w-6 bg-yellow-500 shadow-[0_0_8px_rgba(212,175,55,0.6)]' : i < tutStep ? 'w-2 bg-yellow-600/40' : 'w-2 bg-white/10'}`} />
+      <div className="flex gap-2 mb-6">
+        {WORD.map((l, i) => (
+          <div
+            key={i}
+            className="w-11 h-14 rounded-xl flex items-center justify-center text-2xl font-black italic bg-gradient-to-br from-yellow-300 to-yellow-600 text-black shadow-[0_0_20px_rgba(212,175,55,0.35)]"
+          >
+            {l}
+          </div>
         ))}
       </div>
 
-      <div className="w-full flex gap-3">
-        <button onClick={onBack} className="flex-1 bg-white/5 border border-white/10 py-4 rounded-2xl text-[11px] font-black tracking-widest text-white/50 hover:bg-white/10 transition-all flex items-center justify-center gap-2 uppercase">
-          <ChevronLeft size={16} /> Back
-        </button>
-        <button onClick={() => tutStep < totalSteps - 1 ? setTutStep(tutStep + 1) : onPlay()} className="flex-[2] bg-gradient-to-r from-yellow-500 to-yellow-700 py-4 rounded-2xl text-black font-black tracking-widest transition-transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-yellow-600/20 flex items-center justify-center gap-2 uppercase text-[11px]">
-          {tutStep < totalSteps - 1 ? 'Next' : 'Start Game'} <ChevronRight size={16} />
-        </button>
+      <div className="w-full bg-white/5 rounded-3xl p-6 border border-yellow-600/20 flex items-center justify-between shadow-2xl mb-2">
+        <span className="text-[10px] font-black tracking-widest text-white/40 uppercase">Letters</span>
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-yellow-600/10 border border-yellow-600/30 text-yellow-500 text-2xl flex items-center justify-center select-none">−</div>
+          <span className="text-5xl font-black w-14 text-center text-yellow-100">5</span>
+          <div className="w-10 h-10 rounded-xl bg-yellow-600/10 border border-yellow-600/30 text-yellow-500 text-2xl flex items-center justify-center select-none">+</div>
+        </div>
       </div>
+      <p className="text-center text-[10px] text-white/20 tracking-[0.2em] font-medium mb-2">✦ MATHS HAS 5 LETTERS ✦</p>
+
+      <ProgressDots active={0} />
+      <BottomNav
+        onBack={onBack}
+        onNext={() => { setTutStep(1); setLetterIdx(0); }}
+        nextLabel="I'M READY"
+      />
     </div>
   );
+
+  // ── STEP 1: Phase 1 grid ───────────────────────────────────
+  if (tutStep === 1) {
+    const letter = WORD[letterIdx];
+    const row = TUT_SEL1[letterIdx];
+    return (
+      <div className="w-full flex-1 flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="text-center mb-4">
+          <span className="text-[10px] tracking-[0.3em] text-yellow-500 block font-bold uppercase mb-2">◆ Tutorial · Step 2 of 3 ◆</span>
+          <h2 className="text-3xl font-serif font-bold italic">Find your letter</h2>
+          <p className="text-white/50 text-xs mt-2 max-w-[280px] mx-auto leading-relaxed">
+            Look at letter {letterIdx + 1}. Find the row that contains it.
+          </p>
+        </div>
+
+        <LetterProgress currentLi={letterIdx} />
+
+        <GridRows
+          grid={TUT_GRID1}
+          highlightRow={row}
+          labelPrefix="G"
+        />
+
+        <div className="w-full mt-4 bg-yellow-500/5 border border-yellow-500/20 rounded-2xl px-4 py-3 text-center">
+          <p className="text-[11px] font-bold text-yellow-400/80 tracking-[0.15em] uppercase">
+            Letter {letterIdx + 1} is{' '}
+            <span className="text-yellow-300">{letter}</span>
+            {' '}— it's in Row {row + 1} — tap it!
+          </p>
+        </div>
+
+        <div className="flex gap-3 w-full mt-4">
+          <button
+            onClick={() => setLetterIdx(l => Math.max(0, l - 1))}
+            disabled={letterIdx === 0}
+            className="flex-1 bg-white/5 border border-white/10 py-3 rounded-2xl text-[11px] font-black tracking-widest text-white/40 hover:bg-white/10 transition-all flex items-center justify-center gap-2 uppercase disabled:opacity-30"
+          >
+            <ChevronLeft size={14} /> Prev
+          </button>
+          {letterIdx < 4
+            ? <button
+                onClick={() => setLetterIdx(l => l + 1)}
+                className="flex-[2] bg-yellow-600/15 border border-yellow-600/40 py-3 rounded-2xl text-[11px] font-black tracking-widest text-yellow-400 hover:bg-yellow-600/25 transition-all flex items-center justify-center gap-2 uppercase"
+              >
+                Next Letter <ChevronRight size={14} />
+              </button>
+            : <button
+                onClick={() => { setTutStep(2); setLetterIdx(0); }}
+                className="flex-[2] bg-yellow-600/15 border border-yellow-600/40 py-3 rounded-2xl text-[11px] font-black tracking-widest text-yellow-400 hover:bg-yellow-600/25 transition-all flex items-center justify-center gap-2 uppercase"
+              >
+                Go to Round 2 <ChevronRight size={14} />
+              </button>
+          }
+        </div>
+
+        <ProgressDots active={1} />
+        <BottomNav
+          onBack={() => { setTutStep(0); setLetterIdx(0); }}
+          onNext={() => { setTutStep(2); setLetterIdx(0); }}
+          nextLabel="Skip to Round 2"
+        />
+      </div>
+    );
+  }
+
+  // ── STEP 2: Phase 2 grid ───────────────────────────────────
+  if (tutStep === 2) {
+    const letter = WORD[letterIdx];
+    const row = TUT_SEL2[letterIdx];
+    const allDone = letterIdx === 4;
+    return (
+      <div className="w-full flex-1 flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="text-center mb-4">
+          <span className="text-[10px] tracking-[0.3em] text-yellow-500 block font-bold uppercase mb-2">◆ Tutorial · Step 3 of 3 ◆</span>
+          <h2 className="text-3xl font-serif font-bold italic">One more time</h2>
+          <p className="text-white/50 text-xs mt-2 max-w-[280px] mx-auto leading-relaxed">
+            Letter {letterIdx + 1} again. Find it in this new layout.
+          </p>
+        </div>
+
+        <LetterProgress currentLi={letterIdx} />
+
+        <GridRows
+          grid={TUT_GRID2}
+          highlightRow={row}
+          labelPrefix="L"
+        />
+
+        <div className="w-full mt-4 bg-yellow-500/5 border border-yellow-500/20 rounded-2xl px-4 py-3 text-center">
+          <p className="text-[11px] font-bold text-yellow-400/80 tracking-[0.15em] uppercase">
+            Letter {letterIdx + 1} is{' '}
+            <span className="text-yellow-300">{letter}</span>
+            {' '}— it's in Row {row + 1} — tap it!
+          </p>
+        </div>
+
+        {allDone && (
+          <div className="w-full mt-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <span className="text-[10px] tracking-[0.4em] text-yellow-600 font-bold uppercase block mb-3">◆ Your Word Is ◆</span>
+            <div className="flex justify-center gap-3">
+              {WORD.map((l, idx) => (
+                <div
+                  key={idx}
+                  className="w-12 h-16 bg-gradient-to-br from-yellow-300 to-yellow-600 rounded-xl flex items-center justify-center text-black text-3xl font-black shadow-[0_0_40px_rgba(212,175,55,0.4)] animate-in zoom-in duration-700"
+                  style={{ animationDelay: `${idx * 0.1}s` }}
+                >
+                  {l}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-3 w-full mt-4">
+          <button
+            onClick={() => setLetterIdx(l => Math.max(0, l - 1))}
+            disabled={letterIdx === 0}
+            className="flex-1 bg-white/5 border border-white/10 py-3 rounded-2xl text-[11px] font-black tracking-widest text-white/40 hover:bg-white/10 transition-all flex items-center justify-center gap-2 uppercase disabled:opacity-30"
+          >
+            <ChevronLeft size={14} /> Prev
+          </button>
+          {!allDone
+            ? <button
+                onClick={() => setLetterIdx(l => l + 1)}
+                className="flex-[2] bg-yellow-600/15 border border-yellow-600/40 py-3 rounded-2xl text-[11px] font-black tracking-widest text-yellow-400 hover:bg-yellow-600/25 transition-all flex items-center justify-center gap-2 uppercase"
+              >
+                Next Letter <ChevronRight size={14} />
+              </button>
+            : <button
+                onClick={onPlay}
+                className="flex-[2] bg-gradient-to-r from-yellow-500 to-yellow-700 py-3 rounded-2xl text-[11px] font-black tracking-widest text-black transition-transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 uppercase"
+              >
+                Play Now <ArrowRight size={14} />
+              </button>
+          }
+        </div>
+
+        <ProgressDots active={2} />
+        <BottomNav
+          onBack={() => { setTutStep(1); setLetterIdx(0); }}
+          onNext={onPlay}
+          nextLabel="Start Game"
+        />
+      </div>
+    );
+  }
 }
