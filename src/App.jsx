@@ -230,6 +230,12 @@ export default function App() {
             </div>
           )}
         </main>
+
+        <footer className="mt-auto py-6 flex items-center justify-center gap-4 opacity-40">
+          <div className="w-8 h-[1px] bg-yellow-500/50" />
+          <span className="text-[10px] tracking-widest font-semibold uppercase">MADE BY VISHNU N D</span>
+          <div className="w-8 h-[1px] bg-yellow-500/50" />
+        </footer>
       </div>
 
       <style>{`
@@ -260,11 +266,6 @@ function SplashScreen({ onEnter, onTutorial }) {
         </button>
       </div>
 
-      <footer className="mt-auto pt-10 flex items-center gap-4 opacity-40">
-        <div className="w-8 h-[1px] bg-yellow-500/50" />
-        <span className="text-[10px] tracking-widest font-semibold uppercase">Made by Vishnu N D</span>
-        <div className="w-8 h-[1px] bg-yellow-500/50" />
-      </footer>
     </div>
   );
 }
